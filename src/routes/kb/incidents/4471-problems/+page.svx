@@ -1,0 +1,49 @@
+---
+layout: runbook
+title: '#4471 · three problems, not one'
+owner: dousicap
+status: open
+reviewed: 2026-11-21
+signature: dousicap
+---
+
+<script>
+  import ProblemSplit from '#lib/kb/ProblemSplit.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+</script>
+
+[#4471](/kb/incidents/4471) was merged on subject lines ([decision 0001](/kb/decisions/0001-dedupe-by-subject))
+and marked known as one issue. Read by tenant, channel and body, the reports hold three problems.
+Each one has its own ticket.
+
+<ProblemSplit
+  ticket={4471}
+  issues={{
+    parser: 'https://github.com/dousicap/mega-what-it-shows/issues/1',
+    hint: 'https://github.com/dousicap/mega-what-it-shows/issues/2',
+    'one-day-move': 'https://github.com/dousicap/mega-what-it-shows/issues/3',
+  }}
+/>
+
+## The three problems
+
+- **`parser`**: the shared parser reads every date month first. Every tenant on file writes the day
+  first, so day and month come out swapped. The queued fix for #4471 covers this one only.
+- **`hint`**: the booking-v3 form prints `MM/DD/YYYY` under its date field, and reads the answer the
+  tenant's way, day first. People type what the hint says. Only reports sent through that form, on
+  tenants that run booking-v3. Fixing the parser does not fix this.
+- **`one-day-move`**: the date lands one day off, usually a day early, with day and month in place (`Tuesday` shows as
+  `Monday`; Lisbon and Toronto see different days for one meeting). This is not a swap, so neither
+  fix above touches it. The desk had already noted these reports in `desk-notes.json`.
+
+<Callout kind="warn">
+#4471 is not one bug. Closing it on the parser fix leaves two problems open.
+</Callout>
+
+## How the reports were counted
+
+The export repeats some reports across overlapping pages: one id counts once. Cause comes from the
+tenant (locale and booking form) and the channel, never from the intake tag.
+
+<RenderStamp {signature} />
