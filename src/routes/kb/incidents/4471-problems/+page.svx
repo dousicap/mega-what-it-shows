@@ -2,9 +2,9 @@
 layout: runbook
 title: '#4471 · three problems, not one'
 owner: dousicap
-status: open
+status: closed
 reviewed: 2026-11-21
-signature: dousicap
+signature: 'v1.eyJzdWIiOiIxNzc5IiwiYXVkIjoiY2hhbGxlbmdlOndoYXQtaXQtc2hvd3MiLCJpYXQiOjE3OTUyNzkwNTEsImV4cCI6MTc5NTM2NTQ1MX0.Cn0gtKCh4UD1UqtVbp9Yi-h9AdGADRs7wdwZTegXp6c'
 ---
 
 <script>
@@ -29,21 +29,25 @@ Each one has its own ticket.
 ## The three problems
 
 - **`parser`**: the shared parser reads every date month first. Every tenant on file writes the day
-  first, so day and month come out swapped. The queued fix for #4471 covers this one only.
+  first, so day and month come out swapped. Fixed: `fix(dates): parse dd/mm for eu locales`
+  closed #4471 on 5 October. Ticket #1 is closed as completed.
 - **`hint`**: the booking-v3 form prints `MM/DD/YYYY` under its date field, and reads the answer the
   tenant's way, day first. People type what the hint says. Only reports sent through that form, on
-  tenants that run booking-v3. Fixing the parser does not fix this.
+  tenants that run booking-v3. Fixing the parser does not fix this. Won't fix: the booking-v3 form
+  is retired. Ticket #2 is closed as not planned.
 - **`one-day-move`**: the date lands one day off, usually a day early, with day and month in place (`Tuesday` shows as
   `Monday`; Lisbon and Toronto see different days for one meeting). This is not a swap, so neither
-  fix above touches it. The desk had already noted these reports in `desk-notes.json`.
+  fix above touches it. The desk had already noted these reports in `desk-notes.json`. No fix is
+  planned. Ticket #3 is closed as not planned.
 
-<Callout kind="warn">
-#4471 is not one bug. Closing it on the parser fix leaves two problems open.
+<Callout>
+#4471 closed on 5 October. Parser fixed (#1). Hint won't fix, form retired (#2). One-day move not planned (#3).
 </Callout>
 
 ## How the reports were counted
 
 The export repeats some reports across overlapping pages: one id counts once. Cause comes from the
-tenant (locale and booking form) and the channel, never from the intake tag.
+tenant (locale and booking form) and the channel, never from the intake tag, the desk's way
+(`causes.ts`). The one-day moves stay under `parser`, where the desk files them, and are counted again in their own row.
 
 <RenderStamp {signature} />

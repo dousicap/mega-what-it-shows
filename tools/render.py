@@ -24,14 +24,18 @@ def inline(s):
 def problem_split(kb, ticket, issues):
     d = kb + '/src/lib/data'; R = json.load(open(d + '/reports-4471.json'))
     T = {t['handle']: t for t in (json.load(open(f)) for f in glob.glob(d + '/tenants/*.json'))}
-    res = count.classify([r for r in R if r['mergedInto'] == ticket], T, set(json.load(open(d + '/desk-notes.json'))['oneDayMove']))
+    notes = set(json.load(open(d + '/desk-notes.json'))['oneDayMove'])
+    res = count.classify([r for r in R if r['mergedInto'] == ticket], T, set())  # la vue du desk (causes.ts) : pas de retrait
+    res['one-day-move'] = sorted(i for i in notes if any(i in v for v in res.values()))
     tenants = {r['id']: r['tenant'] for r in R}
     order = sorted([k for k in ('parser', 'hint', 'unplaced') if res[k]], key=lambda k: -len(res[k])) + (['one-day-move'] if res['one-day-move'] else [])
-    total = sum(len(v) for v in res.values())
+    total = sum(len(res[k]) for k in ('parser', 'hint', 'unplaced'))
+    note = ''.join(f'<p class="note">{n} of the <code>{k}</code> reports read as a one-day move: filed under <code>{k}</code> by tenant, and counted again in <code>one-day-move</code>.</p>'
+                   for k in order if k != 'one-day-move' for n in [len(set(res[k]) & set(res['one-day-move']))] if n)
     rows = ''.join(f'<tr><td><code>{k}</code></td><td>{len(res[k])}</td><td>{len({tenants[i] for i in res[k]})}</td><td>'
                    + (f'<a href="{issues[k]}">#{issues[k].split("/")[-1]}</a>' if k in issues else 'no ticket') + '</td></tr>' for k in order)
     return (f'<p class="sum"><strong>{total}</strong> reports merged into #{ticket} · <strong>{len(order)}</strong> {"problem" if len(order) == 1 else "problems"}</p>'
-            '<table><thead><tr><th>problem</th><th>reports</th><th>tenants</th><th>ticket</th></tr></thead><tbody>' + rows + '</tbody></table>')
+            '<table><thead><tr><th>problem</th><th>reports</th><th>tenants</th><th>ticket</th></tr></thead><tbody>' + rows + '</tbody></table>' + note)
 
 def render(kb, svx, today):
     src = open(svx).read()
@@ -56,7 +60,7 @@ def render(kb, svx, today):
     layout = open(kb + '/src/lib/layouts/runbook.svelte').read()
     css = re.search(r'<style>(.*?)</style>', layout, re.S)[1]
     css = re.sub(r':global\(([^()]*)\)', r'\1', css)
-    css += '.sum{font-size:1.1rem}aside{border-left:4px solid var(--accent);padding:.5rem 1rem;margin:1rem 0;background:var(--note-bg)}aside.warn{border-color:var(--warn);background:var(--warn-bg)}.stamp{margin:2rem 0 0;font:.85rem var(--mono);color:var(--muted)}.stamp b{color:var(--accent);letter-spacing:.04em}'
+    css += '.sum{font-size:1.1rem}aside{border-left:4px solid var(--accent);padding:.5rem 1rem;margin:1rem 0;background:var(--note-bg)}aside.warn{border-color:var(--warn);background:var(--warn-bg)}.stamp{margin:2rem 0 0;font:.85rem var(--mono);color:var(--muted)}.stamp b{color:var(--accent);letter-spacing:.04em}.note{color:var(--muted);font-size:.85em}'
     e = html.escape
     return (f'<!DOCTYPE html><html><head><meta charset="utf-8"><title>{e(meta["title"])} · support kb</title><style>{css}</style></head><body><div class="kb">'
             f'<header><a class="crumb" href="/kb">support desk · kb</a><h1>{e(meta["title"])}</h1><p class="meta"><span>owner <b>{e(meta["owner"])}</b></span>'
